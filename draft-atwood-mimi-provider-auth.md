@@ -15,7 +15,7 @@ venue:
   type: "Working Group"
   mail: "mimi@ietf.org"
   arch: "https://mailarchive.ietf.org/arch/browse/mimi/"
-  github: "MarkAtwood/mimi-provider-auth"
+  github: "MarkAtwood/ietf-mimi-provider-auth"
 keyword:
  - MIMI
  - federation
