@@ -667,8 +667,3 @@ RFC 9421 signing and verification with the profile in {{signing}}, with
 keys from trust lists ({{lists}}). The DNS key mechanism, PKIX and DANE
 client certificates are being implemented. It signs every outbound request
 and can either refuse or log unauthenticated inbound requests.
-
-# Acknowledgments
-{:numbered="false"}
-
-TODO acknowledge.
