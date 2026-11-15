@@ -8,7 +8,7 @@ mechanism here is a key in DNS under the provider's domain plus RFC 9421
 request signatures; DANE client certificates, PKIX client certificates
 from configured trust anchors, and trust lists are optional.
 
-This draft has not been submitted to the IETF datatracker.
+Posted 2026-11-15: https://datatracker.ietf.org/doc/draft-atwood-mimi-provider-auth/
 
 ## Files
 
