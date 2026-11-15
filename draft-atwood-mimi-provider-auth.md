@@ -118,6 +118,9 @@ This document fills that gap. It defines:
   configures ({{pkix}}), and trust lists of keys or certificates
   configured per peer ({{lists}}).
 
+* Room for other mechanisms that providers agree on between themselves
+  ({{other}}).
+
 * How a receiver combines them by local policy ({{policy}}), and what it
   answers when authentication fails ({{errors}}).
 
@@ -209,6 +212,7 @@ if some mechanism's authenticated domain equals the source domain.
 | DANE | TLS client certificate | TLSA record, under the source domain | Required | {{dane}} |
 | PKIX | TLS client certificate | Trust anchors the receiver configures | No | {{pkix}} |
 | Trust lists | Signature or client certificate | Per-peer configuration | No | {{lists}} |
+| Other | Agreed between providers | Agreed between providers | - | {{other}} |
 {: title="Provider authentication mechanisms"}
 
 Every provider MUST implement both signing and verification for the DNS
@@ -421,6 +425,20 @@ useful for private federations and testing. It requires out-of-band setup
 for every peer, so a provider that relies only on it cannot reach
 providers it has not been configured for.
 
+# Other Mechanisms {#other}
+
+Providers MAY authenticate each other with other mechanisms that they
+have agreed on, whether bilaterally, within a federation, or by following
+another specification. This document does not describe such mechanisms
+and does not need to. A provider that accepts one treats it like any
+mechanism in this document: it produces an authenticated domain, and the
+rules in {{policy}} apply to it, including that the authenticated domain
+equal the source domain.
+
+Using another mechanism with some peers does not change the requirement
+in {{overview}} to implement the DNS key mechanism, which is how a
+provider reaches peers it has agreed nothing with.
+
 # Local Policy {#policy}
 
 Each target provider decides which mechanisms it accepts, in which order,
@@ -478,7 +496,7 @@ connection MUST be mutually authenticated...") with:
 > authenticates the source provider domain using one of the mechanisms
 > in [this document]. Every provider implements the DNS key mechanism of
 > [this document], Section 5; which mechanisms a provider accepts is local
-> policy.
+> policy, and providers MAY use other mechanisms they have agreed on.
 
 It also replaces the reference to {{RFC6125}}, which {{RFC9525}}
 obsoletes. The second sentence of the paragraph in Section 9 of
