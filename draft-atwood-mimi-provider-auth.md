@@ -49,9 +49,15 @@ normative:
   I-D.ietf-dance-client-auth:
 
 informative:
+  RFC3207:
   RFC6125:
   RFC6335:
   RFC6376:
+  RFC7208:
+  RFC7489:
+  RFC7672:
+  RFC8460:
+  RFC8461:
   RFC7942:
   RFC8792:
   RFC9457:
@@ -111,7 +117,7 @@ This document fills that gap. It defines:
   request with HTTP Message Signatures {{RFC9421}}. TLS is
   server-authenticated only, using the provider's ordinary server
   certificate. This is the same trust model DKIM {{RFC6376}} uses for
-  email.
+  email ({{smtp}}).
 
 * Three optional mechanisms: DANE client certificates ({{dane}}), PKIX
   client certificates checked against trust anchors the receiver
@@ -197,6 +203,57 @@ takes the other road. A provider already proves control of its domain to
 get a server certificate, and a domain-validated certificate is issued on
 the strength of DNS. The provider can publish a key in that same DNS and
 leave the CA out of the client side entirely.
+
+# Precedent: How Email Federates {#smtp}
+
+Email is the largest open federation there is, and it never made client
+certificates its way of knowing who sent something. That is why the
+change described in {{webpki}} cost it so little.
+
+Mail servers protect the connection with STARTTLS {{RFC3207}}. Only the
+receiving server presents a certificate, and the connection is often
+encrypted opportunistically. Who sent a message is established
+separately, at the message level, from DNS:
+
+* DKIM {{RFC6376}}: the sending domain signs each message with a key it
+  publishes at `<selector>._domainkey.<domain>`.
+
+* SPF {{RFC7208}}: the domain lists the hosts that may send for it.
+
+* DMARC {{RFC7489}}: the domain ties those results to the address the
+  recipient sees, and says what to do when they fail.
+
+Whether the connection reaches the right receiver, encrypted, is a third
+question, also answered without client certificates: MTA-STS {{RFC8461}}
+with ordinary server certificates, or DANE {{RFC7672}} with TLSA records
+for the receiver, and TLS reporting {{RFC8460}} when either fails.
+
+The deployments the Chrome policy did break are the bilateral ones:
+relays and partner connections set up to check the sending server's
+certificate. Those now need a private CA, an address allow list, or a
+move to the DNS-based checks above. That is the position MIMI is in
+today.
+
+This document follows the email model, with the differences a
+request-and-response protocol allows:
+
+* The DNS key and request signature of {{dnskey}} do DKIM's job for each
+  HTTPS request instead of each message, at `<selector>._mimi.<domain>`.
+
+* TLS is server-authenticated with the provider's ordinary certificate,
+  as STARTTLS with MTA-STS is. The DANE client certificates of {{dane}}
+  are the TLS-layer option, for providers that want one.
+
+* A MIMI request goes from one provider to another and is not relayed, so
+  the signature covers the request itself (method, target URI, `From`,
+  and the content digest) and is accepted only for a short time after it
+  was made ({{verifying}}). Mail has to survive forwarding, and DKIM is
+  designed around that.
+
+* There is no SPF or DMARC counterpart. The `From` header field names the
+  source provider, the signature is checked against that domain's key,
+  and a request that fails is refused ({{errors}}), not delivered with a
+  warning.
 
 # Overview {#overview}
 
