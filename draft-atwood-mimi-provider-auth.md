@@ -739,8 +739,26 @@ signer against these bytes.
 
 {::boilerplate rfc7942info}
 
-mimid (Review Commit, LLC): an open-source MIMI provider. It implements
-RFC 9421 signing and verification with the profile in {{signing}}, with
-keys from trust lists ({{lists}}). The DNS key mechanism, PKIX and DANE
-client certificates are being implemented. It signs every outbound request
-and can either refuse or log unauthenticated inbound requests.
+mimid (Review Commit, LLC): an open-source (Apache-2.0) MIMI provider,
+<https://github.com/MarkAtwood/mimid>. It implements RFC 9421 signing and
+verification with the profile in {{signing}} and {{verifying}}, with keys
+from DNS ({{dnskey}}), checked with a DNSSEC-validating resolver, and
+from trust lists ({{lists}}), and PKIX client certificates from
+configured trust anchors ({{pkix}}). DANE client certificates ({{dane}})
+are not implemented yet. It signs every outbound request with a nonce,
+rejects a repeated nonce, and refuses or logs unauthenticated inbound
+requests, as configured per peer.
+
+Haven: the MIMI hub of Haven Messenger, at mimi.havenmessenger.com,
+<https://github.com/havenmessenger/interop>. It signs its requests with
+a key published in DNS ({{dnskey}}), and verifies signed requests
+alongside PKIX client certificates from configured trust anchors
+({{pkix}}), with the authenticated domain tied to the `From` domain.
+
+At the IETF 127 Hackathon (November 2026), Haven's hub signed its
+requests to mimid with the key at
+`haven1._mimi.mimi.havenmessenger.com`, and mimid verified them, with the
+key record validated by DNSSEC. Neither provider had configured a trust
+anchor, key, or certificate for the other. That is the case described in
+issue 218 of the mimi-protocol repository: two providers that have
+exchanged nothing in advance authenticate each other's requests.
