@@ -257,8 +257,13 @@ request-and-response protocol allows:
 
 # Overview {#overview}
 
-The source provider always sends its domain in the `From` header field
-(Section 4.1 of {{I-D.ietf-mimi-protocol}}). The target provider runs the
+The source provider MUST send its domain in the `From` header field
+(Section 4.1 of {{I-D.ietf-mimi-protocol}}) on every request, whichever
+mechanism authenticates it. Every mechanism authenticates the domain
+this field names, so a request without exactly one `From` field is not
+authenticated. If the WG replaces `From` with another field, that field
+takes its place throughout this document, with the same requirements
+({{open-issues}}). The target provider runs the
 mechanisms it accepts, in an order it chooses. A mechanism either
 produces an authenticated domain or fails. The request is authenticated
 if some mechanism's authenticated domain equals the source domain.
@@ -341,7 +346,7 @@ The source provider signs each MIMI protocol request with HTTP Message
 Signatures {{RFC9421}}. The signature:
 
 * MUST cover the derived components `@method` and `@target-uri`, and the
-  `from` header field. Covering `from` binds the signature to the source
+  `from` header field ({{overview}}). Covering `from` binds the signature to the source
   domain; without it, a valid signature from one provider could be
   attached to a request that claims to come from another.
 
@@ -375,7 +380,8 @@ target provider's directory (Section 5.1 of {{I-D.ietf-mimi-protocol}}).
 
 To verify a request, the target provider:
 
-1. Takes the source domain from the `From` header field.
+1. Takes the source domain from the `From` header field. A request
+   without exactly one `From` field fails.
 
 2. Selects a signature from the `Signature-Input` field whose `tag`
    parameter is `mimi`, or, if there is none, any signature that covers
@@ -728,11 +734,13 @@ The target provider b.example reads `a.example` from `From`, looks up
 Ed25519 signatures are deterministic, so an implementation can check its
 signer against these bytes.
 
-# Open Issues
+# Open Issues {#open-issues}
 
 * Section 4.1 of {{I-D.ietf-mimi-protocol}} has an editor's note asking
-  whether `From` is the right field for the source domain. If the WG
-  replaces it, the signature covers the new field instead.
+  whether `From` is the right field for the source domain, raised as
+  issue 221 in the mimi-protocol repository. Whichever field the WG
+  chooses, it is required on every request and covered by the signature
+  ({{overview}}, {{signing}}).
 
 * The directory document could advertise which mechanisms a provider
   accepts, so a source provider knows before its first request. This
