@@ -354,8 +354,14 @@ Signatures {{RFC9421}}. The signature:
 * SHOULD include the `tag` parameter with the value `mimi`, so that a
   verifier can find the MIMI signature on a request that carries others.
 
+* SHOULD include the `nonce` parameter on a request whose answer hands
+  out something that runs out, such as a request to fetch key material
+  (Section 5.2 of {{I-D.ietf-mimi-protocol}}), which consumes a
+  KeyPackage ({{replay}}). The nonce is a fresh random value of at least
+  128 bits. The signer MAY include a nonce on any other request.
+
 * MAY cover other components and include other parameters, such as
-  `expires` or `nonce`.
+  `expires`.
 
 The signer MAY include the `alg` parameter. If present, it MUST match the
 key type in the key record (`ed25519` for `k=ed25519`).
@@ -384,14 +390,18 @@ To verify a request, the target provider:
    MAY configure other limits. If `expires` is present and has passed, the
    signature MUST be rejected.
 
-5. Queries TXT records at `<keyid>._mimi.<source-domain>`, and uses the
+5. If the signature has a `nonce` parameter, checks whether it has seen
+   the same nonce from the same source domain and key within the window
+   of step 4. A verifier SHOULD reject a repeated nonce ({{replay}}).
+
+6. Queries TXT records at `<keyid>._mimi.<source-domain>`, and uses the
    first record that is a MIMI key record ({{key-record}}). If there is
    none, or its `p` tag is empty, verification fails.
 
-6. If the request has content, checks that `Content-Digest` matches it
+7. If the request has content, checks that `Content-Digest` matches it
    {{RFC9530}}.
 
-7. Verifies the signature over the signature base {{RFC9421}} with the
+8. Verifies the signature over the signature base {{RFC9421}} with the
    public key.
 
 If all steps succeed, the authenticated domain is the source domain.
@@ -578,15 +588,27 @@ With DNSSEC, the key is authenticated by the zone's signature, and an
 off-path attacker cannot forge it. Deployments that need that assurance
 can require it ({{verifying}}) or use DANE ({{dane}}).
 
-## Replay
+## Replay {#replay}
 
 A signature is valid for any copy of the request within the `created`
 window. An attacker who records a signed request can replay it in that
 window, to the same target, provided the attacker can see the request at
-all; it is sent over TLS. Signers MAY include a `nonce` parameter and
-verifiers MAY track nonces for the window. Most MIMI requests are either
-idempotent or carry MLS messages that the hub will reject the second
-time, which limits the damage.
+all; it is sent over TLS.
+
+Most MIMI requests are either idempotent or carry MLS messages that the
+hub will reject the second time, so a replay of them does little harm.
+A request to fetch key material is neither: each answer hands out one of
+the target user's KeyPackages, so every replay consumes one, and a user
+whose KeyPackages run out cannot be added to rooms until the user's
+clients publish more. The same holds for any request whose answer hands
+out something that runs out.
+
+For these requests the signer SHOULD include a `nonce` ({{signing}}), and
+the verifier SHOULD remember the nonces it has accepted from each source
+domain and key for the length of the `created` window and reject a
+repeat ({{verifying}}). A verifier that keeps nonces only in memory
+forgets them when it restarts; a replay within the window after a
+restart then succeeds. For other requests a nonce is optional.
 
 ## Key Compromise
 
@@ -712,8 +734,6 @@ signer against these bytes.
   That would rest their trust on the target's TLS server certificate,
   which is to say on the Web PKI, which is the thing this document is
   trying to stop depending on for the client side.
-
-* Whether nonces should be required rather than optional.
 
 # Implementation Status
 
