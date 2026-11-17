@@ -439,6 +439,14 @@ The TLSA record data and its matching rules are as in {{RFC6698}} and
 target provider MUST treat the TLSA records as usable only if their
 validation status is "secure"; that is what DANE's security rests on.
 
+With the DANE-TA usage, the target provider matches the source domain
+against a dNSName in the client certificate's subjectAltName, as in
+{{pkix}}, rather than the TLSA owner name that
+{{I-D.ietf-dance-client-auth}} names as the reference identity, since a
+certification authority does not usually issue a certificate for a
+name with underscore-prefixed labels. With the DANE-EE usage the
+certificate's names are not checked ({{RFC7671}}, Section 5.1).
+
 The target provider requests a client certificate in the TLS handshake.
 It may not know the source domain until it reads the `From` header field
 of the first request. It then looks up the TLSA records for that domain
